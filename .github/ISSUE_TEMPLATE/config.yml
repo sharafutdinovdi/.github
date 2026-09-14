@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Revit DevLoader discussions
+    url: https://github.com/sharafutdinovdi/revit-devloader/discussions
+    about: Ask installation, usage or design questions for Revit DevLoader.
+  - name: Revit Model MCP discussions
+    url: https://github.com/sharafutdinovdi/revit-model-mcp/discussions
+    about: Ask installation, usage or design questions for Revit Model MCP.

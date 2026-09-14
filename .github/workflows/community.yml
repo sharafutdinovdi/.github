@@ -1,0 +1,73 @@
+name: Community
+
+on:
+  workflow_call:
+    inputs:
+      configuration-path:
+        description: Label configuration path in the calling repository at the PR base commit.
+        type: string
+        default: .github/labeler.yml
+      issue-message:
+        description: Welcome comment for a first issue.
+        type: string
+        default: Thanks for your first issue! Please complete the issue form with reproduction details and screenshots for visible problems.
+      pr-message:
+        description: Welcome comment for a first pull request.
+        type: string
+        default: Thanks for your first PR! Please follow the repository's contribution guide and complete the PR checklist, including screenshots for UI changes.
+      days-before-stale:
+        description: Inactive days before marking an issue or PR stale.
+        type: number
+        default: 60
+      days-before-close:
+        description: Days after marking an issue stale before closing it. PRs are never closed.
+        type: number
+        default: 14
+      stale-issue-message:
+        description: Stale issue comment. Empty uses the configured day counts.
+        type: string
+        default: ''
+      stale-pr-message:
+        description: Stale PR comment.
+        type: string
+        default: This PR is inactive. Add an update when work resumes. It will remain open.
+      close-issue-message:
+        description: Comment when closing a stale issue.
+        type: string
+        default: Closed after inactivity. Reopen with current reproduction details if the problem remains.
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  community:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label changed paths
+        if: github.event_name == 'pull_request_target'
+        uses: actions/labeler@v7
+        with:
+          configuration-path: ${{ inputs.configuration-path }}
+      - name: Welcome first-time contributors
+        if: >-
+          github.event.action == 'opened' &&
+          (github.event_name == 'issues' || github.event_name == 'pull_request_target')
+        uses: actions/first-interaction@v3
+        with:
+          repo_token: ${{ github.token }}
+          issue_message: ${{ inputs.issue-message }}
+          pr_message: ${{ inputs.pr-message }}
+      - name: Handle inactive issues and PRs
+        if: github.event_name == 'schedule'
+        uses: actions/stale@v11
+        with:
+          days-before-stale: ${{ inputs.days-before-stale }}
+          days-before-close: ${{ inputs.days-before-close }}
+          days-before-pr-close: -1
+          exempt-issue-labels: pinned,bug
+          exempt-pr-labels: pinned,bug
+          stale-issue-message: ${{ inputs.stale-issue-message || format('This issue has had no activity for {0} days. Add an update to keep it open; otherwise it closes in {1} days.', inputs.days-before-stale, inputs.days-before-close) }}
+          stale-pr-message: ${{ inputs.stale-pr-message }}
+          close-issue-message: ${{ inputs.close-issue-message }}
